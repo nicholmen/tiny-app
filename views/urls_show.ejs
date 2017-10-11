@@ -6,14 +6,20 @@
   <title>TinyApp</title>
 </head>
 
+<header>
+  <% include ./partials/_header %>
+</header>
+
 <body>
   <!-- display a single URL and its shortened form -->
   <ul>
-      <li>
-        full URL: <%= longURL %> ||  shortened form: <%= shortURL %> 
-      </li>
-      <li>
-      </li>
+    <li>
+      full URL:
+      <%= longURL %> || shortened form:
+        <%= shortURL %>
+    </li>
+    <li>
+    </li>
   </ul>
 </body>
 
