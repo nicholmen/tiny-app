@@ -62,6 +62,7 @@ app.get('/urls/:id', (req, res) => {
   return res.render('urls_show', templateVars);
 });
 
+
 // AUTHENTICSTION MIDDLEWARE - (eg) checks the cookie session to make sure the user is logged in, if not logged in redirects to the login page.. to implement: e.g. app.post('/urls', isAuthenticated, (req, res) =>
 // function isAuthenticated (res, req, next) {
 //   if (req.sesssion......)
@@ -71,6 +72,7 @@ app.get('/urls/:id', (req, res) => {
 //    res.locals.user= .....
 //     return next();
 // }
+
 
 // upon a post request to /urls, redirect to urls/< the 6 digit random string generated to represent a given URL>
 app.post('/urls', (req, res) => {
@@ -83,13 +85,24 @@ app.post('/urls', (req, res) => {
   return res.redirect('urls/' + shortURL); 
 });
 
+
+//upon a POST request to /urls/:id/delete, remove the shortened URL and then redirect the client back to the urls_index page at /urls
+app.post("/urls/:id/delete", (req, res) => {
+  shortURL = req.params.id;
+
+  delete urlDatabase[shortURL];
+  return res.redirect('/urls')
+})
+
+
 //upon a get request to /u/< one of our 6 digit short URLs>, redirect to the corresponding long UIRL
-app.get("/u/:shortURL", (req, res) => {
+app.post("/u/:shortURL", (req, res) => {
   // let longURL = ...
   let shortURL = req.params.shortURL;
   let longURL =  urlDatabase[shortURL]
   return res.redirect(longURL);
 });
+
 
 // initiate server to listen for connections on the specified host and port.
 app.listen(PORT, () => {
