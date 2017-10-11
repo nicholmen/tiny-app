@@ -1,3 +1,5 @@
+//remember to try "use strict" at the end
+
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
@@ -74,7 +76,7 @@ app.get('/urls/:id', (req, res) => {
 // }
 
 
-// upon a post request to /urls, redirect to urls/< the 6 digit random string generated to represent a given URL>
+// creating new urls: upon a post request to /urls, redirect to urls/< the 6 digit random string generated to represent a given URL>
 app.post('/urls', (req, res) => {
   console.log(req.body); // debug statement to see POST parameters
   let shortURL = generateRandomString(req.body);
@@ -88,20 +90,28 @@ app.post('/urls', (req, res) => {
 
 //upon a POST request to /urls/:id/delete, remove the shortened URL and then redirect the client back to the urls_index page at /urls
 app.post("/urls/:id/delete", (req, res) => {
-  shortURL = req.params.id;
+ let shortURL = req.params.id;
 
   delete urlDatabase[shortURL];
   return res.redirect('/urls')
 })
 
 
-//upon a get request to /u/< one of our 6 digit short URLs>, redirect to the corresponding long UIRL
+//upon a post request to /u/< one of our 6 digit short URLs>, redirect to the corresponding long UIRL
 app.post("/u/:shortURL", (req, res) => {
-  // let longURL = ...
   let shortURL = req.params.shortURL;
   let longURL =  urlDatabase[shortURL]
   return res.redirect(longURL);
 });
+
+//upon a post request to /urls/<%= shortURL %>/edit , update the according url
+app.post("/urls/:id/edit", (req, res) => {
+  let shortURL = req.params.id
+  let longURL = req.body.longURL
+  console.log(req.body.longURL)
+  urlDatabase[shortURL] = longURL
+  return res.redirect('/urls/' + shortURL)
+})
 
 
 // initiate server to listen for connections on the specified host and port.

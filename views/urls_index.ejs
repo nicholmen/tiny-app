@@ -16,8 +16,9 @@
     <% for (var item in urls) { %>
       <li>
         <form method="POST" action="/urls/<%= item %>/delete">
-          
-        <%= item %> - <%= urls[item] %> <input type="submit" value="delete">
+          <%= item %> -> <%= urls[item] %> 
+          <a href="/urls/<%= item %>">update</a> 
+          <input type="submit" value="delete">
       </form>
       </li>
       <% } %>
