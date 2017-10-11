@@ -8,17 +8,17 @@
 <header>
   <% include ./partials/_header %>
 </header>
-
+<h2> (: Your URLs :)</h2>
 <body>
   <!-- A list or table of the URLs and their shortened forms, and a link for shortening a new URL -->
   <ul>
+
     <% for (var item in urls) { %>
       <li>
-        <%= item %> -
-          <%= urls[item] %>
-      </li>
-      <li>
-        <a href='www.google.com'>link</a>
+        <form method="POST" action="/urls/<%= item %>/delete">
+          
+        <%= item %> -<%= urls[item] %> <input type="submit" value="delete">
+      </form>
       </li>
       <% } %>
   </ul>

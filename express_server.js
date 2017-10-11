@@ -10,11 +10,12 @@ function generateRandomString() {
 }
 // console.log(generateRandomString('x'));
 
-//The body-parser library will allow us to access POST request parameters
+//The body-parser library will allow us to access POST body =
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+// accessing embedded javascript (ejs) templating engine
 app.set('view engine', 'ejs');
 
 let urlDatabase = {
@@ -22,21 +23,34 @@ let urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 };
 
+
+// upon a get request to our homepage, respond with 'Hello!' on the homepage:
 app.get('/', (req, res) => {
-  res.end('Hello!');
+  return res.end('Hello!');
 });
 
+
+// upon a get request to /urls, sends the rendered html of our urls_index ejs file (where our URLs are displayed) to the client
 app.get('/urls', (req, res) => {
   let templateVars = {
     urls: urlDatabase
   };
-  res.render('urls_index', templateVars);
+  return res.render('urls_index', templateVars);
 });
 
+
+/**
+ * upon a get request to urls/new, sends the rendered html of our urls_new page which contains a form to submit a new URL
+ * 
+ * id - ....
+ * 
+ */
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  return res.render('urls_new');
 });
 
+
+// upon a get request to urls/< a generated 6 digit random string >, renders our urls_show ejs file which displays a long url and its corresponding random string
 app.get('/urls/:id', (req, res) => {
   let shortURL = req.params.id;
   let longURL = urlDatabase[shortURL]
@@ -45,9 +59,20 @@ app.get('/urls/:id', (req, res) => {
     longURL
   };
 
-  res.render('urls_show', templateVars);
+  return res.render('urls_show', templateVars);
 });
 
+// AUTHENTICSTION MIDDLEWARE - (eg) checks the cookie session to make sure the user is logged in, if not logged in redirects to the login page.. to implement: e.g. app.post('/urls', isAuthenticated, (req, res) =>
+// function isAuthenticated (res, req, next) {
+//   if (req.sesssion......)
+//     return res.redirect('/login')
+//    else
+
+//    res.locals.user= .....
+//     return next();
+// }
+
+// upon a post request to /urls, redirect to urls/< the 6 digit random string generated to represent a given URL>
 app.post('/urls', (req, res) => {
   console.log(req.body); // debug statement to see POST parameters
   let shortURL = generateRandomString(req.body);
@@ -55,16 +80,18 @@ app.post('/urls', (req, res) => {
   console.log(shortURL)
   urlDatabase[shortURL] = longURL;
   console.log(urlDatabase);
-  res.redirect('urls/' + shortURL); // Respond with 'Ok' (we will replace this)
+  return res.redirect('urls/' + shortURL); 
 });
 
+//upon a get request to /u/< one of our 6 digit short URLs>, redirect to the corresponding long UIRL
 app.get("/u/:shortURL", (req, res) => {
   // let longURL = ...
   let shortURL = req.params.shortURL;
   let longURL =  urlDatabase[shortURL]
-  res.redirect(longURL);
+  return res.redirect(longURL);
 });
 
+// initiate server to listen for connections on the specified host and port.
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
