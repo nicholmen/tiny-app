@@ -51,10 +51,28 @@ const requireAuth = (req, res, next) => {
 // accessing embedded javascript (ejs) templating engine
 app.set('view engine', 'ejs');
 
+
+// an object to store our url data
 let urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com'
 };
+
+
+// an object to store our users data
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 
 
 // upon a get request to our homepage, respond with 'Hello!' on the homepage:
@@ -158,6 +176,43 @@ app.post("/logout", (req, res) => {
   res.clearCookie('username');
   return res.redirect('/urls')
 })
+
+
+//when we get a get request to /register, return a page that includes a form with an email and password field.
+app.get("/register", (req, res) => {
+  return res.render("user_registration")
+})
+
+function userExists (email) {
+  for (let userID in users) {
+    if (users[userID].email === email) {
+      return true;
+    }
+  }
+}
+
+//when we get a post request to /register, add a new user object into the global users object to keep track of the newly regisrtered user's email, password and user ID
+app.post("/register", (req, res) => {
+  const userID = generateRandomString();
+  const email = req.body.email.trim()
+  const password = req.body.password
+  // const { email, password } = req.body //
+  users[userID] = {
+    id: userID,
+    email: email, //can also write just `email,` here if the key is the same as the value ??
+    password: password 
+  }
+  if (email === '' || password === '') {
+    res.status(400).send('bad. enter email and password things')
+  } else if (userExists(email)) {
+    res.status(400).send('bad. this email is taken')
+  } else {
+  res.cookie('user_id', userID)
+  console.log(' users object:', users)
+  return res.redirect('/urls')
+  }
+})
+
 
 // initiate server to listen for connections on the specified host and port.
 app.listen(PORT, () => {
