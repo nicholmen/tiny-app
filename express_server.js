@@ -8,6 +8,8 @@ const bodyParser = require('body-parser');
 const randomstring = require("randomstring");
 const cookieParser = require('cookie-parser');
 
+const COOKIE_NAME = "user_id";
+
 app.locals.title = "TinyApp";
 
 
@@ -29,24 +31,18 @@ app.use(cookieParser());
 
 // Provides username to all templates via res.locals
 app.use((req, res, next) => {
-  const { username /*, multiple, thing */ } = req.cookies;
-  // const username = req.cookies.username;
-  // const nultiple = req.cookies.multiple;
-  // const things = req.cookies.things;
+  const userId = req.cookies[COOKIE_NAME];
+  const user = getUserById(userId);
+  // const username = user ? user.email : null; // google MDN ternary operator
+  let username = null;
+  if(user) {
+    username = user.email;
+  }
 
   //app.locals // object with template vars for all requests
   res.locals.username = username; // object with template variables for the current request
-  
-  // res.locals.username = req.cookies.username;
   next();
 });
-
-const requireAuth = (req, res, next) => {
-  if(!req.cookies.username) {
-    return res.status(403).send("You are not logged in.")
-  }
-  next();
-}
 
 // accessing embedded javascript (ejs) templating engine
 app.set('view engine', 'ejs');
@@ -166,14 +162,22 @@ app.post("/urls/:id/edit", (req, res) => {
 
 // setting the username cookie
 app.post("/login", (req, res) => {
-  console.log(req.body)
-  res.cookie('username', req.body.username)
-  return res.redirect('/urls')
+  // console.log(req.body)
+  // res.cookie('username', req.body.username);
+  const { email, password } = req.body;
+  try {
+    const userId = authenticate(email, password);
+    res.cookie(COOKIE_NAME, userId);
+    return res.redirect('/urls');
+  }
+  catch(error) {
+    res.status(403).send(error.message);
+  }
 })
 
 //when we get a post request to /logout, clear the username cookie
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie(COOKIE_NAME);
   return res.redirect('/urls')
 })
 
@@ -183,6 +187,9 @@ app.get("/register", (req, res) => {
   return res.render("user_registration")
 })
 
+/** Return true if a user with specified email exists
+ * @returns {Boolean} - User exists
+ */
 function userExists (email) {
   for (let userID in users) {
     if (users[userID].email === email) {
@@ -191,25 +198,76 @@ function userExists (email) {
   }
 }
 
+/** Creates a user in the database returning userId */
+function createUser(email, password) {
+  if(!email) { throw new Error("Must provide an email address"); }
+  if(!password) { throw new Error("Must provide password"); }
+  
+  const id = generateRandomString();
+  users[id] = {
+    id,
+    email,
+    password
+  };
+  return id;
+}
+
+function getUserById(id) {
+  return users[id];
+}
+
+/** Gets a user by email address
+ * @returns {Object} User
+ */
+function getUserByEmail(email) {
+  for(var userId in users) {
+    const user = getUserById(userId);
+    if(user.email === email) {
+      return user;
+    }
+  }
+}
+
+/** Authenticate user
+ * @returns {userId}
+ */
+function authenticate(email, password) {
+  const user = getUserByEmail(email);
+  if(!user) { throw new Error("Unknown user") }
+  if(user.password !== password) { throw new Error("Unknown user"); }
+
+  return user.id;
+}
+
 //when we get a post request to /register, add a new user object into the global users object to keep track of the newly regisrtered user's email, password and user ID
 app.post("/register", (req, res) => {
-  const userID = generateRandomString();
+  // const userID = generateRandomString();
   const email = req.body.email.trim()
   const password = req.body.password
   // const { email, password } = req.body //
-  users[userID] = {
-    id: userID,
-    email: email, //can also write just `email,` here if the key is the same as the value ??
-    password: password 
-  }
-  if (email === '' || password === '') {
-    res.status(400).send('bad. enter email and password things')
-  } else if (userExists(email)) {
-    res.status(400).send('bad. this email is taken')
-  } else {
-  res.cookie('user_id', userID)
-  console.log(' users object:', users)
-  return res.redirect('/urls')
+  // users[userID] = {
+  //   id: userID,
+  //   email: email, //can also write just `email,` here if the key is the same as the value ??
+  //   password: password 
+  // }
+  // if (email === '' || password === '') {
+  //   res.status(400).send('bad. enter email and password things')
+  // } else if (userExists(email)) {
+  //   res.status(400).send('bad. this email is taken')
+  // } else {
+  // res.cookie('user_id', userID)
+  // console.log(' users object:', users)
+  // return res.redirect('/urls')
+  // }
+  try {
+    if(userExists(email)) { throw new Error("User with this email already exists"); }
+
+    const userId = createUser(email, password);
+
+    res.cookie(COOKIE_NAME, userId)
+    return res.redirect("/urls");
+  } catch (error) {
+    res.status(400).send(error.message);
   }
 })
 
