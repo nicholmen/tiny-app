@@ -98,7 +98,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 
 //upon a post request to /u/< one of our 6 digit short URLs>, redirect to the corresponding long UIRL
-app.post("/u/:shortURL", (req, res) => {
+app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL =  urlDatabase[shortURL]
   return res.redirect(longURL);

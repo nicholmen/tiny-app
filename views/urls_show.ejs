@@ -18,14 +18,13 @@
       <%= longURL %> || shortened form:
         <%= shortURL %>
     </li>
-    <li>
-    </li>
   </ul>
   <form action='/urls/<%= shortURL %>/edit' method='POST' style='margin:150px;'>
     <label for='longURL'>Enter a URL:</label>
     <input id='longURL' type='text' name='longURL' placeholder='<%= longURL %>' style='width: 300px'>
     <input type='submit' value='Submit'>
   </form>
+  <a href='/urls'>Take me back to the URL list now</a>
 </body>
 
 </html>
