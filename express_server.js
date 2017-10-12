@@ -5,6 +5,10 @@ const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 const bodyParser = require('body-parser');
 const randomstring = require("randomstring");
+const cookieParser = require('cookie-parser');
+
+app.locals.title = "TinyApp";
+
 
 //implement a function that produces a string of 6 random alphanumeric characters
 function generateRandomString() {
@@ -17,6 +21,32 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+// Provides methods like req.cookies and res.cookie
+// req.cookies gets all cookies
+// res.cookie sets a cookie by name
+app.use(cookieParser());
+
+// Provides username to all templates via res.locals
+app.use((req, res, next) => {
+  const { username /*, multiple, thing */ } = req.cookies;
+  // const username = req.cookies.username;
+  // const nultiple = req.cookies.multiple;
+  // const things = req.cookies.things;
+
+  //app.locals // object with template vars for all requests
+  res.locals.username = username; // object with template variables for the current request
+  
+  // res.locals.username = req.cookies.username;
+  next();
+});
+
+const requireAuth = (req, res, next) => {
+  if(!req.cookies.username) {
+    return res.status(403).send("You are not logged in.")
+  }
+  next();
+}
+
 // accessing embedded javascript (ejs) templating engine
 app.set('view engine', 'ejs');
 
@@ -28,14 +58,15 @@ let urlDatabase = {
 
 // upon a get request to our homepage, respond with 'Hello!' on the homepage:
 app.get('/', (req, res) => {
-  return res.end('Hello!');
+  // return res.end('Hello!');
+  res.redirect('/urls');
 });
 
 
 // upon a get request to /urls, sends the rendered html of our urls_index ejs file (where our URLs are displayed) to the client
 app.get('/urls', (req, res) => {
   let templateVars = {
-    urls: urlDatabase
+    urls: urlDatabase,
   };
   return res.render('urls_index', templateVars);
 });
@@ -65,7 +96,7 @@ app.get('/urls/:id', (req, res) => {
 });
 
 
-// AUTHENTICSTION MIDDLEWARE - (eg) checks the cookie session to make sure the user is logged in, if not logged in redirects to the login page.. to implement: e.g. app.post('/urls', isAuthenticated, (req, res) =>
+// AUTHENTICSTION //* - (eg) checks the cookie session to make sure the user is logged in, if not logged in redirects to the login page.. to implement: e.g. app.post('/urls', isAuthenticated, (req, res) =>
 // function isAuthenticated (res, req, next) {
 //   if (req.sesssion......)
 //     return res.redirect('/login')
@@ -104,6 +135,7 @@ app.get("/u/:shortURL", (req, res) => {
   return res.redirect(longURL);
 });
 
+
 //upon a post request to /urls/<%= shortURL %>/edit , update the according url
 app.post("/urls/:id/edit", (req, res) => {
   let shortURL = req.params.id
@@ -113,6 +145,18 @@ app.post("/urls/:id/edit", (req, res) => {
   return res.redirect('/urls/' + shortURL)
 })
 
+// setting the username cookie
+app.post("/login", (req, res) => {
+  console.log(req.body)
+  res.cookie('username', req.body.username)
+  return res.redirect('/urls')
+})
+
+//when we get a post request to /logout, clear the username cookie
+app.post("/logout", (req, res) => {
+  res.clearCookie('username');
+  return res.redirect('/urls')
+})
 
 // initiate server to listen for connections on the specified host and port.
 app.listen(PORT, () => {
